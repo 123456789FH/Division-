@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>تطبيق تفاعلي | اختبار تشخيصي القسمة (1)</title>
+  <style>
+    :root{--bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--accent:#0f9d58;--danger:#c2410c;--border:#e5e7eb}
+    *{box-sizing:border-box} body{margin:0;font-family:Tajawal,system-ui;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1100px;margin:auto;padding:16px}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;margin:10px 0}
+    h1,h2{margin:.2em 0} h1{font-size:22px} h2{font-size:18px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn{border:0;border-radius:999px;padding:8px 14px;font-weight:800;cursor:pointer}
+    .primary{background:var(--accent);color:#fff}
+    .ghost{background:#eef2f7}
+    .opt{border:1px solid var(--border);border-radius:999px;padding:8px 12px;cursor:pointer}
+    .opt.correct{border-color:#16a34a;background:#dcfce7}
+    .opt.wrong{border-color:#dc2626;background:#fee2e2}
+    .muted{color:var(--muted)}
+    .q{font-weight:800}
+    .grid{display:grid;grid-template-columns:1fr;gap:8px}
+    .progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .bar{height:100%;background:#16a34a;width:0%}
+    .footer{font-size:13px;color:var(--muted);text-align:center;padding:10px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="card">
+    <h1>اختبار تشخيصي – القسمة (1)</h1>
+    <p class="muted">رياضيات الصف الثالث الابتدائي – الفصل الدراسي الثاني</p>
+    <div class="progress"><div id="bar" class="bar"></div></div>
+  </header>
+
+  <section id="quiz" class="card"></section>
+
+  <div class="row">
+    <button id="prev" class="btn ghost">السابق</button>
+    <button id="next" class="btn primary">التالي</button>
+    <span id="score" class="muted"></span>
+  </div>
+
+  <div class="footer">أ/ فاطمة هزازي – ملتقى معلمي ومعلمات الرياضيات – التعليم التفاعلي</div>
+</div>
+
+<script>
+// بنك أسئلة (مستوحى من الاختبار التشخيصي المرفق)
+const Q = [
+  {type:'mc', q:'لدى هند ٣٥ قلم تلوين، وتريد حفظها في علب تتسع كل منها لـ٥ أقلام. كم علبة تحتاج؟', a:7, opts:[5,7,8,6]},
+  {type:'mc', q:'ما المسألة التي نحلها لنتحقق من أن ٦٠ ÷ ١٠ = ؟', a:'٦ × ١٠', opts:['٦ + ١٠','٦ × ١٠','٦ ÷ ١٠','١٠ − ٦']},
+  {type:'mc', q:'ما العدد الذي ناتج قسمته ٨ على ؟ يساوي ٢٨؟', a:4, opts:[0,1,4,8]},
+  {type:'mc', q:'زرع عبد الرحمن ٢٨ شجرة في ٧ صفوف متساوية. كم شجرة في كل صف؟', a:4, opts:[3,4,5,7]},
+  {type:'short', q:'أوجد ناتج القسمة: ٣٥ ÷ ٥', a:'٧'},
+  {type:'short', q:'أوجد ناتج القسمة: ١٢ ÷ ٢', a:'٦'},
+  {type:'mc', q:'في الجملة ٤٨ ÷ ٦ = ٨، العدد المقسوم عليه هو:', a:'٦', opts:['٤٨','٦','٨','ناتج الضرب']},
+  {type:'mc', q:'يريد سامي أن يضع ٢٠ تفاحة في ٥ أكياس متساوية. كم تفاحة في كل كيس؟', a:4, opts:[3,4,5,6]},
+  {type:'mc', q:'ضع ✓ أو ✗: عند قسمة أي عدد على ١ يكون الناتج العدد نفسه.', a:'✓', opts:['✓','✗']},
+  {type:'mc', q:'أي جملة عددية صحيحة؟', a:'٢٤ ÷ ٤ = ٦', opts:['٢٤ ÷ ٦ = ٤','٢٤ ÷ ٤ = ٦','٦ × ٤ = ١٠','٤ + ٦ = ٢٤']}
+];
+
+let i=0, answers=Array(Q.length).fill(null);
+const quiz=document.getElementById('quiz');
+const bar=document.getElementById('bar');
+const score=document.getElementById('score');
+
+function render(){
+  const q=Q[i];
+  bar.style.width = Math.round((i/Q.length)*100)+'%';
+  let html = `<h2>السؤال ${i+1}</h2><div class="q">${q.q}</div>`;
+  if(q.type==='mc'){
+    html += '<div class="grid">'+q.opts.map(o=>`<div class="opt" onclick="choose('${o}')">${o}</div>`).join('')+'</div>';
+  } else {
+    html += `<input id="ans" placeholder="اكتب الإجابة هنا" style="padding:10px;border-radius:10px;border:1px solid var(--border)">`;
+  }
+  quiz.innerHTML = html;
+}
+
+window.choose = function(v){ answers[i]=v; mark(); };
+function mark(){
+  const q=Q[i];
+  const opts=[...document.querySelectorAll('.opt')];
+  opts.forEach(o=>{
+    if(o.textContent==q.a) o.classList.add('correct');
+    if(o.textContent==answers[i] && answers[i]!=q.a) o.classList.add('wrong');
+  });
+}
+
+document.getElementById('next').onclick=()=>{ if(Q[i].type==='short'){answers[i]=document.getElementById('ans').value;} if(i<Q.length-1){i++; render();} updateScore(); };
+document.getElementById('prev').onclick=()=>{ if(i>0){i--; render();} };
+
+function updateScore(){
+  const s = answers.filter((v,idx)=>String(v)==String(Q[idx].a)).length;
+  score.textContent = `الدرجة الحالية: ${s} / ${Q.length}`;
+}
+
+render();
+</script>
+</body>
+</html>
